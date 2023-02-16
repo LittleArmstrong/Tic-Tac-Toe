@@ -18,72 +18,64 @@ const tictactoe = (() => {
    function mark(row, col, playerChar) {
       board[row][col] = playerChar;
       console.log(board[row][col]);
-      return (
-         checkHorizontalWinCond(playerChar) ||
-         checkVerticalWinCond(playerChar) ||
-         checkDiagonalWinCond(playerChar)
-      );
-   }
-
-   function checkHorizontalWinCond(playerChar) {
-      for (let row = 0; row < board.length; row++) {
-         let counter = 0;
-         for (let col = 0; col < board[row].length; col++) {
-            if (board[row][col] === playerChar) {
-               counter++;
-               if (counter === WIN_COND) return true;
-            } else counter = 0;
-         }
-      }
-      return false;
-   }
-
-   function checkVerticalWinCond(playerChar) {
-      for (let col = 0; col < board[0].length; col++) {
-         let counter = 0;
-         for (let row = 0; row < board.length; row++) {
-            if (board[row][col] === playerChar) {
-               counter++;
-               if (counter === WIN_COND) return true;
-            } else counter = 0;
-         }
-      }
-      return false;
-   }
-
-   function checkDiagonalWinCond(playerChar) {
-      for (let row = 0; row < board.length; row++) {
-         for (let col = 0; col < board[row].length; col++) {
-            let counter = 0;
-            let diagonalRow = row;
-            let diagonalCol = col;
-            do {
-               if (board[diagonalRow][diagonalCol] === playerChar) {
-                  counter++;
-                  if (counter === WIN_COND) return true;
-               } else counter = 0;
-               diagonalRow++;
-               diagonalCol++;
-            } while (diagonalRow < board.length && diagonalCol < board[diagonalRow - 1].length);
-
-            counter = 0;
-            diagonalRow = row;
-            diagonalCol = col;
-            do {
-               if (board[diagonalRow][diagonalCol] === playerChar) {
-                  counter++;
-                  if (counter === WIN_COND) return true;
-               } else counter = 0;
-               diagonalRow++;
-               diagonalCol--;
-            } while (diagonalRow < board.length && diagonalCol > -1);
-         }
-      }
-      return false;
+      return getWinCoordinates(row, col, board, WIN_COND);
    }
 
    function getBoard() {
       return board;
+   }
+
+   function getWinCoordinates(row, col, board, winCond) {
+      //the directions to search in and the steps added starting from the set origin
+      //e.g. the right and left side of the horizontal axis
+      const searchDirections = {
+         horizontal: [
+            [0, 1],
+            [0, -1],
+         ],
+         vertical: [
+            [1, 0],
+            [-1, 0],
+         ],
+         diagonal1: [
+            [1, 1],
+            [-1, -1],
+         ],
+         diagonal2: [
+            [1, -1],
+            [-1, 1],
+         ],
+      };
+      const searchChar = board[row][col];
+      const winCoordinates = [
+         [row, col],
+         [row, col],
+      ];
+      //iterate the board starting from the set origin
+      for (let [_, steps] of Object.entries(searchDirections)) {
+         //reset counter for every direction
+         let counter = 1; //1 because origin is search character and automatically counted
+         for (let index = 0; index < steps.length; index++) {
+            //check both sides of the direction starting from origin coordinates
+            //add the steps so the origin character isn't counted again
+            let [rowStep, colStep] = steps[index];
+            let iRow = row + rowStep;
+            let iCol = col + colStep;
+            while (board?.[iRow]?.[iCol] === searchChar) {
+               counter++;
+               iRow += rowStep;
+               iCol += colStep;
+               //stop as soon as the win condition is met and save the start or end coordinates
+               if (counter >= winCond) {
+                  winCoordinates[index] = [iRow - rowStep, iCol - colStep];
+                  return { start: winCoordinates[0], end: winCoordinates[1] };
+               }
+            }
+            //if the condition is not met, then save the last valid value for the
+            //end coordinates
+            winCoordinates[index] = [iRow - rowStep, iCol - colStep];
+         }
+      }
    }
 
    return { createGameBoard, mark, getBoard };
