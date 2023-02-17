@@ -1,12 +1,22 @@
 "use strict";
 
 const tictactoe = (() => {
-   const WIN_COND = 3;
    let board = [];
+   let winCondition = 3;
+   let boardRows = null;
+   let boardCols = null;
+
    let winCoordinates = null;
 
    function createGameBoard(rows, cols) {
       board = createBoard(rows, cols);
+      boardRows = rows;
+      boardCols = cols;
+      return getBoard();
+   }
+
+   function resetGameBoard() {
+      return createGameBoard(boardRows, boardCols);
    }
 
    function createBoard(rows, cols) {
@@ -18,7 +28,7 @@ const tictactoe = (() => {
    function mark(row, col, playerChar) {
       if (board[row][col]) return false;
       board[row][col] = playerChar;
-      winCoordinates = calculateWinCoordinates(row, col, board, WIN_COND) ?? null;
+      winCoordinates = calculateWinCoordinates(row, col, board, winCondition) ?? null;
       return true;
    }
 
@@ -87,7 +97,7 @@ const tictactoe = (() => {
       return winCoordinates;
    }
 
-   return { createGameBoard, mark, getBoard, getWinCoordinates };
+   return { createGameBoard, mark, getBoard, getWinCoordinates, resetGameBoard };
 })();
 
 tictactoe.createGameBoard(3, 3);
@@ -97,3 +107,4 @@ console.log(tictactoe.mark(1, 0, "x"));
 console.log(tictactoe.mark(2, 0, "y"));
 console.log(tictactoe.mark(2, 0, "x"));
 console.table(tictactoe.getBoard());
+console.log(tictactoe.resetGameBoard());
