@@ -3,6 +3,7 @@
 const tictactoe = (() => {
    const WIN_COND = 3;
    let board = [];
+   let winCoordinates = null;
 
    function createGameBoard(rows, cols) {
       board = createBoard(rows, cols);
@@ -10,22 +11,22 @@ const tictactoe = (() => {
 
    function createBoard(rows, cols) {
       const board = [];
-      let i = rows;
-      while (i--) board.push(new Array(cols));
+      for (let i = 0; i < rows; i++) board.push(new Array(cols));
       return board;
    }
 
    function mark(row, col, playerChar) {
+      if (board[row][col]) return false;
       board[row][col] = playerChar;
-      console.log(board[row][col]);
-      return getWinCoordinates(row, col, board, WIN_COND);
+      winCoordinates = calculateWinCoordinates(row, col, board, WIN_COND) ?? null;
+      return true;
    }
 
    function getBoard() {
       return board;
    }
 
-   function getWinCoordinates(row, col, board, winCond) {
+   function calculateWinCoordinates(row, col, board, winCond) {
       //the directions to search in and the steps added starting from the set origin
       //e.g. the right and left side of the horizontal axis
       const searchDirections = {
@@ -52,7 +53,7 @@ const tictactoe = (() => {
          [row, col],
       ];
       //iterate the board starting from the set origin
-      for (let [_, steps] of Object.entries(searchDirections)) {
+      for (let [direction, steps] of Object.entries(searchDirections)) {
          //reset counter for every direction
          let counter = 1; //1 because origin is search character and automatically counted
          for (let index = 0; index < steps.length; index++) {
@@ -68,7 +69,11 @@ const tictactoe = (() => {
                //stop as soon as the win condition is met and save the start or end coordinates
                if (counter >= winCond) {
                   winCoordinates[index] = [iRow - rowStep, iCol - colStep];
-                  return { start: winCoordinates[0], end: winCoordinates[1] };
+                  return {
+                     start: { row: winCoordinates[1][0], col: winCoordinates[1][1] },
+                     end: { row: winCoordinates[0][0], col: winCoordinates[0][1] },
+                     direction,
+                  };
                }
             }
             //if the condition is not met, then save the last valid value for the
@@ -78,13 +83,17 @@ const tictactoe = (() => {
       }
    }
 
-   return { createGameBoard, mark, getBoard };
+   function getWinCoordinates() {
+      return winCoordinates;
+   }
+
+   return { createGameBoard, mark, getBoard, getWinCoordinates };
 })();
 
 tictactoe.createGameBoard(3, 3);
 
-console.log(tictactoe.mark(0, 2, "x"));
-console.log(tictactoe.mark(1, 1, "x"));
+console.log(tictactoe.mark(0, 0, "x"));
+console.log(tictactoe.mark(1, 0, "x"));
+console.log(tictactoe.mark(2, 0, "y"));
 console.log(tictactoe.mark(2, 0, "x"));
-let board = tictactoe.getBoard();
-console.table(board);
+console.table(tictactoe.getBoard());
