@@ -1,13 +1,36 @@
 "use strict";
 
 const tictactoe = (() => {
+   /**
+    * @typedef {Object} Line
+    * @property {Object} start      - The start coordinates
+    * @property {number} start.col  - The column (y) coordinate
+    * @property {number} start.row  - The row (y) coordinate
+    * @property {Object} end        - The end coordinates
+    * @property {number} end.col    - The column (x) coordinate
+    * @property {number} end.row    - The row (x) coordinate
+    * @property {string} direction  - The direction
+    */
+
+   /**
+    * @typedef {Array.<Array.<string>>} Board
+    */
+
    let board = [];
    let winCondition = 3;
    let boardRows = null;
    let boardCols = null;
 
    let winCoordinates = null;
-
+   /**
+    * Public
+    *
+    * Create a 2D board for playing tic tac toe.
+    *
+    * @param {number} rows Number of rows
+    * @param {number} cols Number of columns
+    * @returns {Array.<Array.<string>>} a 2D Array of empty strings
+    */
    function createGameBoard(rows, cols) {
       board = createBoard(rows, cols);
       boardRows = rows;
@@ -15,15 +38,44 @@ const tictactoe = (() => {
       return getBoard();
    }
 
+   /**
+    * Public
+    *
+    * Clear the current board
+    *
+    * @returns {Array.<Array.<string>>} a 2D Array of empty strings
+    */
+
    function resetGameBoard() {
       return createGameBoard(boardRows, boardCols);
    }
+
+   /**
+    * Private
+    *
+    * Create the 2D game board
+    *
+    * @param {number} rows Number of rows
+    * @param {number} cols Number of columns
+    * @returns
+    */
 
    function createBoard(rows, cols) {
       const board = [];
       for (let i = 0; i < rows; i++) board.push(new Array(cols));
       return board;
    }
+
+   /**
+    * Public
+    *
+    * Mark the board at the given coordinate if empty
+    *
+    * @param {number} row The row containing the mark
+    * @param {number} col The column containing mark
+    * @param {string} playerChar The character to mark
+    * @returns {boolean} whether the board was successfully marked or not
+    */
 
    function mark(row, col, playerChar) {
       if (board[row][col]) return false;
@@ -32,9 +84,29 @@ const tictactoe = (() => {
       return true;
    }
 
+   /**
+    * Public
+    *
+    * Retuns the current game board
+    *
+    * @returns {Board} the 2D board
+    */
+
    function getBoard() {
       return board;
    }
+
+   /**
+    * Private
+    *
+    * Get the winning coordinates of the winning line if any
+    *
+    * @param {number} row The row containing the starting cell
+    * @param {number} col The column containing the starting cell
+    * @param {Board} board The board to check the win condition
+    * @param {number} winCond The number of adjacent chars needed
+    * @returns {Line} the coordinates of the adjacent chars in a line that won
+    */
 
    function calculateWinCoordinates(row, col, board, winCond) {
       //the directions to search in and the steps added starting from the set origin
@@ -93,6 +165,13 @@ const tictactoe = (() => {
       }
    }
 
+   /**
+    * Public
+    *
+    * Returns the winning coordinates of the current board
+    *
+    * @returns {Line} the winning coordinates of the current board
+    */
    function getWinCoordinates() {
       return winCoordinates;
    }
