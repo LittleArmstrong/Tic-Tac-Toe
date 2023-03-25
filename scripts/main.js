@@ -16,12 +16,14 @@ const tictactoe = (() => {
     * @typedef {Array.<Array.<string>>} Board
     */
 
-   let board = [];
-   let winCondition = 3;
-   let boardRows = null;
-   let boardCols = null;
+   const _board = [];
+   const _players = [];
 
-   let winCoordinates = null;
+   let _boardRows = null;
+   let _boardCols = null;
+   let _turn = 0;
+   let _winCondition = 3;
+   let _winCoordinates = null;
    /**
     * Public
     *
@@ -32,9 +34,10 @@ const tictactoe = (() => {
     * @returns {Array.<Array.<string>>} a 2D Array of empty strings
     */
    function createGameBoard(rows, cols) {
-      board = createBoard(rows, cols);
-      boardRows = rows;
-      boardCols = cols;
+      const board = _createBoard(rows, cols);
+      _board.length = 0;
+      _board.push(...board); //to not create a new array and save reference
+      _boardCols = cols;
       return getBoard();
    }
 
@@ -47,7 +50,7 @@ const tictactoe = (() => {
     */
 
    function resetGameBoard() {
-      return createGameBoard(boardRows, boardCols);
+      return createGameBoard(_boardRows, _boardCols);
    }
 
    /**
@@ -60,7 +63,7 @@ const tictactoe = (() => {
     * @returns
     */
 
-   function createBoard(rows, cols) {
+   function _createBoard(rows, cols) {
       const board = [];
       for (let i = 0; i < rows; i++) board.push(new Array(cols));
       return board;
@@ -73,14 +76,14 @@ const tictactoe = (() => {
     *
     * @param {number} row The row containing the mark
     * @param {number} col The column containing mark
-    * @param {string} playerChar The character to mark
     * @returns {boolean} whether the board was successfully marked or not
     */
 
-   function mark(row, col, playerChar) {
-      if (board[row][col]) return false;
-      board[row][col] = playerChar;
-      winCoordinates = calculateWinCoordinates(row, col, board, winCondition) ?? null;
+   function mark(row, col) {
+      if (_board[row][col] || _players.length === 0) return false;
+      _board[row][col] = _players[_turn].getChar();
+      _winCoordinates = calculateWinCoordinates(row, col, _board, _winCondition) ?? null;
+      _turn = nextTurn(_turn, _players - length);
       return true;
    }
 
@@ -93,7 +96,7 @@ const tictactoe = (() => {
     */
 
    function getBoard() {
-      return board;
+      return _board;
    }
 
    /**
@@ -105,7 +108,7 @@ const tictactoe = (() => {
     * @param {number} col The column containing the starting cell
     * @param {Board} board The board to check the win condition
     * @param {number} winCond The number of adjacent chars needed
-    * @returns {Line} the coordinates of the adjacent chars in a line that won
+    * @returns {Line|Object} the coordinates of the adjacent chars in a line that won or an empty object if not
     */
 
    function calculateWinCoordinates(row, col, board, winCond) {
@@ -163,6 +166,8 @@ const tictactoe = (() => {
             winCoordinates[index] = [iRow - rowStep, iCol - colStep];
          }
       }
+
+      return {};
    }
 
    /**
@@ -173,17 +178,29 @@ const tictactoe = (() => {
     * @returns {Line} the winning coordinates of the current board
     */
    function getWinCoordinates() {
-      return winCoordinates;
+      return _winCoordinates;
    }
 
-   return { createGameBoard, mark, getBoard, getWinCoordinates, resetGameBoard };
+   function Player(name, char) {
+      let points = 0;
+
+      const getName = () => name;
+      const getChar = () => char;
+
+      return { getName, getChar };
+   }
+
+   function createPlayer(name, char) {
+      const player = Player(name, char);
+      _players.push(player);
+      return player;
+   }
+
+   function nextTurn(currentTurn, maxTurn) {
+      return currentTurn + 1 < maxTurn ? currentTurn + 1 : 0;
+   }
+
+   return { createGameBoard, mark, getBoard, getWinCoordinates, resetGameBoard, createPlayer };
 })();
 
 tictactoe.createGameBoard(3, 3);
-
-console.log(tictactoe.mark(0, 0, "x"));
-console.log(tictactoe.mark(1, 0, "x"));
-console.log(tictactoe.mark(2, 0, "y"));
-console.log(tictactoe.mark(2, 0, "x"));
-console.table(tictactoe.getBoard());
-console.log(tictactoe.resetGameBoard());
