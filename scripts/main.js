@@ -15,15 +15,27 @@ const tictactoe = (() => {
    /**
     * @typedef {Array.<Array.<string>>} Board
     */
+   const SEARCH_DIRECTIONS = {
+      VERTICAL: [
+         [1, 0],
+         [-1, 0],
+      ],
+      DIAGONAL_LEFT_UP: [
+         [1, 1],
+         [-1, -1],
+      ],
+      DIAGONAL_RIGHT_UP: [
+         [1, -1],
+         [-1, 1],
+      ],
+   };
 
    const _board = [];
    const _players = [];
 
    let _boardRows = null;
    let _boardCols = null;
-   let _turn = 0;
-   let _winCondition = 3;
-   let _winCoordinates = null;
+   let _winningLineLength = 3;
    /**
     * Public
     *
@@ -34,9 +46,8 @@ const tictactoe = (() => {
     * @returns {Array.<Array.<string>>} a 2D Array of empty strings
     */
    function createGameBoard(rows, cols) {
-      const board = _createBoard(rows, cols);
       _board.length = 0;
-      _board.push(...board); //to not create a new array and save reference
+      for (let i = 0; i < rows; i++) _board.push(new Array(cols));
       _boardCols = cols;
       return getBoard();
    }
@@ -50,41 +61,7 @@ const tictactoe = (() => {
     */
 
    function resetGameBoard() {
-      return createGameBoard(_boardRows, _boardCols);
-   }
-
-   /**
-    * Private
-    *
-    * Create the 2D game board
-    *
-    * @param {number} rows Number of rows
-    * @param {number} cols Number of columns
-    * @returns
-    */
-
-   function _createBoard(rows, cols) {
-      const board = [];
-      for (let i = 0; i < rows; i++) board.push(new Array(cols));
-      return board;
-   }
-
-   /**
-    * Public
-    *
-    * Mark the board at the given coordinate if empty
-    *
-    * @param {number} row The row containing the mark
-    * @param {number} col The column containing mark
-    * @returns {boolean} whether the board was successfully marked or not
-    */
-
-   function mark(row, col) {
-      if (_board[row][col] || _players.length === 0) return false;
-      _board[row][col] = _players[_turn].getChar();
-      _winCoordinates = calculateWinCoordinates(row, col, _board, _winCondition) ?? null;
-      _turn = nextTurn(_turn, _players - length);
-      return true;
+      createGameBoard(_boardRows, _boardCols);
    }
 
    /**
@@ -96,98 +73,104 @@ const tictactoe = (() => {
     */
 
    function getBoard() {
-      return _board;
-   }
-
-   /**
-    * Private
-    *
-    * Get the winning coordinates of the winning line if any
-    *
-    * @param {number} row The row containing the starting cell
-    * @param {number} col The column containing the starting cell
-    * @param {Board} board The board to check the win condition
-    * @param {number} winCond The number of adjacent chars needed
-    * @returns {Line|Object} the coordinates of the adjacent chars in a line that won or an empty object if not
-    */
-
-   function calculateWinCoordinates(row, col, board, winCond) {
-      //the directions to search in and the steps added starting from the set origin
-      //e.g. the right and left side of the horizontal axis
-      const searchDirections = {
-         horizontal: [
-            [0, 1],
-            [0, -1],
-         ],
-         vertical: [
-            [1, 0],
-            [-1, 0],
-         ],
-         diagonal1: [
-            [1, 1],
-            [-1, -1],
-         ],
-         diagonal2: [
-            [1, -1],
-            [-1, 1],
-         ],
-      };
-      const searchChar = board[row][col];
-      const winCoordinates = [
-         [row, col],
-         [row, col],
-      ];
-      //iterate the board starting from the set origin
-      for (let [direction, steps] of Object.entries(searchDirections)) {
-         //reset counter for every direction
-         let counter = 1; //1 because origin is search character and automatically counted
-         for (let index = 0; index < steps.length; index++) {
-            //check both sides of the direction starting from origin coordinates
-            //add the steps so the origin character isn't counted again
-            let [rowStep, colStep] = steps[index];
-            let iRow = row + rowStep;
-            let iCol = col + colStep;
-            while (board?.[iRow]?.[iCol] === searchChar) {
-               counter++;
-               iRow += rowStep;
-               iCol += colStep;
-               //stop as soon as the win condition is met and save the start or end coordinates
-               if (counter >= winCond) {
-                  winCoordinates[index] = [iRow - rowStep, iCol - colStep];
-                  return {
-                     start: { row: winCoordinates[1][0], col: winCoordinates[1][1] },
-                     end: { row: winCoordinates[0][0], col: winCoordinates[0][1] },
-                     direction,
-                  };
-               }
-            }
-            //if the condition is not met, then save the last valid value for the
-            //end coordinates
-            winCoordinates[index] = [iRow - rowStep, iCol - colStep];
-         }
-      }
-
-      return {};
-   }
-
-   /**
-    * Public
-    *
-    * Returns the winning coordinates of the current board
-    *
-    * @returns {Line} the winning coordinates of the current board
-    */
-   function getWinCoordinates() {
-      return _winCoordinates;
+      return [..._board];
    }
 
    function Player(name, char) {
-      let points = 0;
+      const markCoordinates = [];
+      const winningLineCoordinates = [];
 
       const getName = () => name;
       const getChar = () => char;
 
-      return { getName, getChar };
+      /**
+       * Mark the board at the given coordinate if empty
+       *
+       * @param {number} row The row containing the mark
+       * @param {number} col The column containing mark
+       * @returns {boolean} whether the board was successfully marked or not
+       */
+
+      const markBoardAt = (row, col) => {
+         if (_board[row][col]) return false;
+         _board[row][col] = char;
+         markCoordinates.push([row, col]);
+         return true;
+      };
+
+      const findtWinningLineFromBoard = () => {
+         const winCoordinates = [
+            [row, col],
+            [row, col],
+         ];
+         for (let [direction, steps] of Object.entries(SEARCH_DIRECTIONS)) {
+            let counter = 1; //1 because origin is search character and automatically counted
+            for (let index = 0; index < steps.length; index++) {
+               let [rowStep, colStep] = steps[index];
+               let iRow = row + rowStep;
+               let iCol = col + colStep;
+               while (board?.[iRow]?.[iCol] === searchChar) {
+                  counter++;
+                  iRow += rowStep;
+                  iCol += colStep;
+                  if (counter >= winCond) {
+                     winCoordinates[index] = [iRow - rowStep, iCol - colStep];
+                     return {
+                        start: { row: winCoordinates[1][0], col: winCoordinates[1][1] },
+                        end: { row: winCoordinates[0][0], col: winCoordinates[0][1] },
+                        direction,
+                     };
+                  }
+               }
+               winCoordinates[index] = [iRow - rowStep, iCol - colStep];
+            }
+         }
+      };
+
+      const _findHorizontalWinningLine = (startRow, startCol) => {
+         const STEPS = [
+            [0, 1],
+            [0, -1],
+         ];
+         const ROW = 0;
+         const COL = 1;
+
+         const positions = [[startRow, startCol]];
+         STEPS.forEach((step) => {
+            let row = startRow + step[ROW];
+            let col = startCol + step[COL];
+
+            while (_board?.[row]?.[col] === char) {
+               positions.push([startRow, col]);
+               if (positions.length >= _winningLineLength) return positions;
+               row += step[ROW];
+               col += step[COL];
+            }
+         });
+         return [];
+      };
+
+      const _findWinningLine = (startPosition, directions) => {
+         const ROW = 0;
+         const COL = 1;
+         const positions = [startPosition];
+
+         directions.forEach((stepsInDirection) => {
+            let row = startPosition[ROW] + stepsInDirection[ROW];
+            let col = startPosition[COL] + stepsInDirection[COL];
+
+            while (_board?.[row]?.[col] === char) {
+               positions.push([row, col]);
+               if (positions.length >= _winningLineLength) return positions;
+               row += stepsInDirection[ROW];
+               col += stepsInDirection[COL];
+            }
+         });
+
+         return [];
+      };
+
+      return { getName, getChar, markBoardAt };
    }
 
    function createPlayer(name, char) {
@@ -196,11 +179,7 @@ const tictactoe = (() => {
       return player;
    }
 
-   function nextTurn(currentTurn, maxTurn) {
-      return currentTurn + 1 < maxTurn ? currentTurn + 1 : 0;
-   }
-
-   return { createGameBoard, mark, getBoard, getWinCoordinates, resetGameBoard, createPlayer };
+   return { createGameBoard, getBoard, resetGameBoard, createPlayer };
 })();
 
 tictactoe.createGameBoard(3, 3);
