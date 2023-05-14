@@ -5,6 +5,9 @@ html {
 
 body {
    min-height: 100%;
+   background-color: #d7d5d5;
+   display: flex;
+   align-items: center;
 }
 
 *,
@@ -13,4 +16,123 @@ body {
    box-sizing: inherit;
    margin: 0;
    padding: 0;
+}
+
+.game-container {
+   display: grid;
+   grid: "header" 1fr
+         "board"  auto
+         "settings" 1fr
+   ;
+   grid-template-columns: 1fr;
+   grid-template-rows: 1fr auto 1fr;
+   width: 96vw;
+   margin: 0 auto;
+   min-height: 90vh;
+   background-color: aquamarine;
+}
+
+.game-header{
+   display: flex;
+   flex-direction: column;
+   grid-area: header;
+   align-self: end;
+}
+
+
+h1 {
+   text-align: center;
+   margin-bottom: 0.3em;
+}
+
+.gear-container{
+   align-self: flex-end;
+   width: 24px;
+   height: 24px;
+   margin-right: 8vw;
+   margin-bottom: 0.5em;
+   cursor: pointer;
+}
+
+.gear {
+   pointer-events: none;
+}
+
+.gear-container:hover{
+   transform: scale(1.2, 1.2);
+   transition: transform 0.3s;
+}
+
+.board-size{
+   width: 80vw;
+   aspect-ratio: 1;
+}
+
+.settings {
+   display: none;
+   overflow: hidden;
+   position: absolute;
+   width: 80vw;
+   aspect-ratio: 1;
+   background-color: rgba(219, 217, 217, 0.648);   
+   border: 2px solid black;
+}
+
+.settings .field{
+   font-size: 1rem;
+   margin: 10px;
+}
+
+.settings button {
+   font-size: 1rem;
+   margin-left: 10px;
+}
+
+.visible {
+   display: block;
+}
+
+
+.board-container{
+   position: relative;
+   grid-area: board;
+   display: flex;
+   justify-content: center;
+}
+
+.board {
+   display: flex;
+   flex-wrap: wrap;
+   width: 80vw;
+   aspect-ratio: 1;
+   background-color: white;
+}
+
+.cell {
+   flex-grow: 1;
+   width: 33%;
+   border: 1px solid black;
+}
+
+.menu{
+   grid-area: settings;
+}
+
+button.start-game{
+   font-size: 1rem;
+   font-weight: bold;
+   border: 2px solid black;
+   padding: 0.2em;
+   display: block;
+   margin: 0.5em auto;
+   cursor: pointer;
+}
+
+button.start-game:hover{
+   transform: scale(1.2, 1.2);
+   transition: transform 0.3s;
+}
+
+button.start-game:active{
+   background-color: rgb(198, 198, 198);
 }

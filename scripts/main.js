@@ -3,6 +3,12 @@
  * 
  */
 const tictactoe = (() => {
+   const settings = {
+      MIN_STREAK_LENGTH: 3,
+      MIN_CELL_WIDTH_IN_PX: 5,
+      MIN_CELL_HEIGHT_IN_PX: 5,
+      autoNextTurn: true
+   }
    /** @type {Player[]} the players in the game*/
    const _players = [];
    /** @type {Board} the reference to the current board */
@@ -52,7 +58,7 @@ const tictactoe = (() => {
          const coordinates = [];
          for (const vector of directions){
             coordinates.push(findStreakInAxis(vector));
-            if (coordinates.length >= MIN_STREAK_LENGTH) return coordinates
+            if (coordinates.length >= settings.MIN_STREAK_LENGTH) return coordinates
          }
          return [];
       }
@@ -78,11 +84,7 @@ const tictactoe = (() => {
          hasSameContent, next, isFilled};
    }
 
-   function Board(xCellsMax, yCellsMax){
-      const MIN_STREAK_LENGTH = 3;
-      const MIN_CELL_WIDTH_IN_PX = 5;
-      const MIN_CELL_HEIGHT_IN_PX = 5;
-   
+   function Board(xCellsMax, yCellsMax){   
       /**
        * Creates a Vector Object
        * @param {integer} x x coordinate
@@ -140,9 +142,6 @@ const tictactoe = (() => {
          let nextTurn = currentTurn < _players.length ? currentTurn + 1 : 0;
          setTurnTo(nextTurn);
       }
-      let autoNextTurn = false;
-      const enableAutoTurn = () => autoNextTurn = true;
-      const disableAutoTurn = () => autoNextTurn = false;  
 
       /**
           * Create a board gui for a container.
@@ -154,7 +153,7 @@ const tictactoe = (() => {
       const createGuiFor = (container) => {
          const cellWidth = container.clientWidth / xCellsMax;
          const cellHeight = container.clientHeight / yCellsMax;
-         if (cellWidth < MIN_CELL_WIDTH_IN_PX || cellHeight < MIN_CELL_HEIGHT_IN_PX)
+         if (cellWidth < settings.MIN_CELL_WIDTH_IN_PX || cellHeight < settings.MIN_CELL_HEIGHT_IN_PX)
             throw new Error("Container height or width too small");
 
          const documentFragment = document.createDocumentFragment();
@@ -168,11 +167,12 @@ const tictactoe = (() => {
                   const position = Position(clickedCellNode.dataset.x, clickedCellNode.dataset.y);
                   const cell = getCell(position);
                   if(cell.isFilled()) return;
+
                   const currentPlayer = _players?.[currentTurn];
                   if(!currentPlayer) throw Error("Invalid player");
                   cell.setContentTo(currentPlayer.getChar());
 
-                  if(autoNextTurn) setNextTurn();
+                  if(settings.autoNextTurn) setNextTurn();
                })
                documentFragment.appendChild(cellNode);
             }         
@@ -181,13 +181,10 @@ const tictactoe = (() => {
       }
 
 
-      return {get, reset, isMarkedAt, getCharAt, getCell, createGuiFor, setTurnTo, setNextTurn, enableAutoTurn, disableAutoTurn};
+      return {get, reset, isMarkedAt, getCharAt, getCell, createGuiFor, setTurnTo, setNextTurn};
 
-<<<<<<< HEAD
-=======
    }
 
->>>>>>> 88bd97ee9c377cd0d84a5a290067cebf3365ebf8
    function Player(name, char) {
       const getName = () => name;
       const getChar = () => char;
@@ -220,9 +217,13 @@ const tictactoe = (() => {
       return [..._players];
    }
 
-   return { createBoard, setBoard, getBoard, createPlayer, insertPlayer, getPlayers };
-})();
+   function getSettings(){
+      return settings;
+   }
 
-tictactoe.createBoard(3, 3);
-const board = tictactoe.getBoard();
-console.log(board.get());
+   function changeSettings(newSettings){
+      Object.assign(settings, newSettings);
+   }
+
+   return { createBoard, setBoard, getBoard, createPlayer, insertPlayer, getPlayers, getSettings, changeSettings };
+})();
