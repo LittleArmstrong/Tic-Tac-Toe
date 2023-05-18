@@ -19,38 +19,33 @@ body {
 }
 
 .game-container {
-   display: grid;
-   grid: "header" 1fr
-         "board"  auto
-         "settings" 1fr
-   ;
-   grid-template-columns: 1fr;
-   grid-template-rows: 1fr auto 1fr;
-   width: 96vw;
+   width: min(73vw, 73vh);
    margin: 0 auto;
-   min-height: 90vh;
+   padding: 0 10px;
    background-color: aquamarine;
 }
 
 .game-header{
    display: flex;
-   flex-direction: column;
-   grid-area: header;
-   align-self: end;
+   flex-direction: row;
+   justify-content: center;
+   align-items: center;
+
 }
 
+.game-header > div:first-child{
+   margin-right: auto ;
+   visibility: hidden;
+}
 
-h1 {
-   text-align: center;
-   margin-bottom: 0.3em;
+.hidden-gear{
+   margin-right: auto;
+   width: 24px;
 }
 
 .gear-container{
-   align-self: flex-end;
+   margin-left: auto;
    width: 24px;
-   height: 24px;
-   margin-right: 8vw;
-   margin-bottom: 0.5em;
    cursor: pointer;
 }
 
@@ -63,16 +58,11 @@ h1 {
    transition: transform 0.3s;
 }
 
-.board-size{
-   width: 80vw;
-   aspect-ratio: 1;
-}
-
 .settings {
    display: none;
    overflow: hidden;
    position: absolute;
-   width: 80vw;
+   width: 100%;
    aspect-ratio: 1;
    background-color: rgba(219, 217, 217, 0.648);   
    border: 2px solid black;
@@ -92,19 +82,18 @@ h1 {
    display: block;
 }
 
-
 .board-container{
    position: relative;
-   grid-area: board;
    display: flex;
    justify-content: center;
+   width: 100%;
+   aspect-ratio: 1;
 }
 
 .board {
    display: flex;
    flex-wrap: wrap;
-   width: 80vw;
-   aspect-ratio: 1;
+   width: 100%;
    background-color: white;
 }
 
