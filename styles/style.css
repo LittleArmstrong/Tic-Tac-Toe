@@ -101,6 +101,7 @@ body {
    flex-grow: 1;
    width: 33%;
    border: 1px solid black;
+   cursor: pointer;
 }
 
 .menu{
