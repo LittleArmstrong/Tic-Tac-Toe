@@ -116,8 +116,8 @@ const tictactoe = (() => {
       const board = [];
 
       //populate the board with cells
-      for (let y = 0; y < yCellsMax; y++) {
-         for (let x = 0; x < xCellsMax; x++) {
+      for (let y = 1; y <= yCellsMax; y++) {
+         for (let x = 1; x <= xCellsMax; x++) {
             board.push(createCell(x, y));
          }
       }
@@ -205,7 +205,12 @@ const tictactoe = (() => {
          cellNode.innerText = cell.getContent();
       }
 
-      return { get, reset, getCell, findStreakFrom, setNodeContainer, updateCellNode };
+
+      const update = () => {
+         board.forEach(cell => updateCellNode(cell.getPosition()));
+      }
+
+      return { get, reset, getCell, findStreakFrom, setNodeContainer, updateCellNode, update };
    }
 
    /**   
@@ -320,6 +325,8 @@ const tictactoe = (() => {
    return { createBoard, createPlayer, createTurnSystem, createPosition };
 })();
 
+
+
 const boardNode = document.getElementById("board");
 const board = tictactoe.createBoard(3, 3);
 board.setNodeContainer(boardNode);
@@ -331,6 +338,13 @@ const players = [
 
 const turnSystem = tictactoe.createTurnSystem(players);
 
+
+
+const resetBtn = document.getElementById("reset-game");
+resetBtn.addEventListener("click", (event) => {
+   board.reset();
+   board.update()
+});
 
 boardNode.addEventListener("click", function (event) {
    const cellNode = event.target;
@@ -347,3 +361,4 @@ boardNode.addEventListener("click", function (event) {
 
    turnSystem.setNextTurn();
 })
+

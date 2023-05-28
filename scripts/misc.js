@@ -7,7 +7,3 @@ settingsGear.addEventListener("click", (event) => {
    settings.classList.toggle(VISIBLE_CLASS);
 });
 
-const startBtn = document.getElementById("start-game");
-startBtn.addEventListener("click", (Event) => {
-   console.log("henlo");
-});
