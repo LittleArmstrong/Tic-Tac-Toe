@@ -34,7 +34,7 @@ const tictactoe = (() => {
       const getY = () => y;
 
 
-      const next = (vector) => createPosition(x + vector.getX, y + vector.getY);
+      const next = (vector) => createPosition(x + vector.getX(), y + vector.getY());
 
       return { get, getX, getY, next };
    }
@@ -155,31 +155,56 @@ const tictactoe = (() => {
        * @param {Cell} cell starting cell
        * @returns {AxisCoordinates} the cells for each axis direction
        */
-      const findStreakFrom = (cell) => {
-         const directionVectors = {
-            horizontal: [createVector(1, 0), createVector(1, 0).invert()],
-            vertical: [createVector(0, 1), createVector(0, 1).invert()],
-            diagonal1: [createVector(1, 1), createVector(1, 1).invert()],
-            diagonal2: [createVector(1, -1), createVector(1, -1).invert()]
-         };
-         const coordinates = {
-            horizontal: [cell.getPosition()],
-            vertical: [cell.getPosition()],
-            diagonal1: [cell.getPosition()],
-            diagonal2: [cell.getPosition()]
-         };
+      // const findStreakFrom = (cell) => {
+      //    const directionVectors = {
+      //       horizontal: [createVector(1, 0), createVector(1, 0).invert()],
+      //       vertical: [createVector(0, 1), createVector(0, 1).invert()],
+      //       diagonal1: [createVector(1, 1), createVector(1, 1).invert()],
+      //       diagonal2: [createVector(1, -1), createVector(1, -1).invert()]
+      //    };
+      //    const coordinates = {
+      //       horizontal: [],
+      //       vertical: [],
+      //       diagonal1: [],
+      //       diagonal2: []
+      //    };
 
-         for (const [direction, unitVectors] of Object.entries(directionVectors)) {
-            for (const vector of unitVectors) {
-               let currentCell = cell;
-               let nextCell = board.getCell(currentCell.getPosition().next(vector));
-               while (currentCell.getContent() === nextCell?.getContent()) {
-                  coordinates[direction].push(nextCell);
-                  currentCell = nextCell;
-               }
-            }
+      //    for (const [direction, unitVectors] of Object.entries(directionVectors)) {
+      //       for (const vector of unitVectors) {
+      //          coordinates[direction].push(...findStreak({ cell, vector }));
+      //       }
+      //    }
+      //    return coordinates;
+      // }
+
+      /**
+       * Find cells with same content in a streak in the given direction
+       * @param {Cell} cell the cell to start the search
+       * @param {Vector} vector the direction to search
+       * @returns {Cell[]} an array with cells
+       */
+      const findStreak = (cell, vector) => {
+         const char = cell.getContent();
+         const coordinates = [];
+         let currentCell = cell;
+         let nextPosition = currentCell.getPosition().next(vector);
+         let nextCell = getCell(nextPosition);
+         while (nextCell?.getContent() === char) {
+            coordinates.push(nextCell.getPosition());
+            currentCell = nextCell;
          }
          return coordinates;
+      }
+
+      const findHorizontalStreak = (cell) => {
+         const streak = [cell];
+         const direction_right = createVector(1, 0);
+         const direction_left = createVector(-1, 0);
+         streak.push(
+            ...findStreak(cell, direction_left),
+            ...findStreak(cell, direction_right)
+         );
+         return streak;
       }
 
       let nodeContainer = null;
@@ -210,7 +235,7 @@ const tictactoe = (() => {
          board.forEach(cell => updateCellNode(cell.getPosition()));
       }
 
-      return { get, reset, getCell, findStreakFrom, setNodeContainer, updateCellNode, update };
+      return { get, reset, getCell, findHorizontalStreak, setNodeContainer, updateCellNode, update };
    }
 
    /**   
@@ -339,7 +364,6 @@ const players = [
 const turnSystem = tictactoe.createTurnSystem(players);
 
 
-
 const resetBtn = document.getElementById("reset-game");
 resetBtn.addEventListener("click", (event) => {
    board.reset();
@@ -347,17 +371,18 @@ resetBtn.addEventListener("click", (event) => {
 });
 
 boardNode.addEventListener("click", function (event) {
+   event.preventDefault()
    const cellNode = event.target;
    const position = tictactoe.createPosition(cellNode.dataset.x, cellNode.dataset.y);
    const cell = board.getCell(position);
-   if (cell.getContent()) return;
+   if (cell?.getContent()) return;
 
    const currentPlayer = turnSystem.getCurrentPlayer();
    const playerChar = currentPlayer.getChar();
    cell.setContentTo(playerChar);
 
    board.updateCellNode(position);
-
+   const horizontalStreak = board.findHorizontalStreak(cell);
 
    turnSystem.setNextTurn();
 })
