@@ -25,7 +25,7 @@ body {
    background-color: aquamarine;
 }
 
-.game-header{
+.game-header {
    display: flex;
    flex-direction: row;
    justify-content: center;
@@ -33,17 +33,17 @@ body {
 
 }
 
-.game-header > div:first-child{
-   margin-right: auto ;
+.game-header>div:first-child {
+   margin-right: auto;
    visibility: hidden;
 }
 
-.hidden-gear{
+.hidden-gear {
    margin-right: auto;
    width: 24px;
 }
 
-.gear-container{
+.gear-container {
    margin-left: auto;
    width: 24px;
    cursor: pointer;
@@ -53,7 +53,7 @@ body {
    pointer-events: none;
 }
 
-.gear-container:hover{
+.gear-container:hover {
    transform: scale(1.2, 1.2);
    transition: transform 0.3s;
 }
@@ -64,11 +64,11 @@ body {
    position: absolute;
    width: 100%;
    aspect-ratio: 1;
-   background-color: rgba(219, 217, 217, 0.648);   
+   background-color: rgba(219, 217, 217, 0.648);
    border: 2px solid black;
 }
 
-.settings .field{
+.settings .field {
    font-size: 1rem;
    margin: 10px;
 }
@@ -82,7 +82,7 @@ body {
    display: block;
 }
 
-.board-container{
+.board-container {
    position: relative;
    display: flex;
    justify-content: center;
@@ -102,13 +102,15 @@ body {
    width: 33%;
    border: 1px solid black;
    cursor: pointer;
+   font-size: 100px;
+   text-align: center;
 }
 
-.menu{
+.menu {
    grid-area: settings;
 }
 
-button.start-game{
+button.start-game {
    font-size: 1rem;
    font-weight: bold;
    border: 2px solid black;
@@ -118,11 +120,11 @@ button.start-game{
    cursor: pointer;
 }
 
-button.start-game:hover{
+button.start-game:hover {
    transform: scale(1.2, 1.2);
    transition: transform 0.3s;
 }
 
-button.start-game:active{
+button.start-game:active {
    background-color: rgb(198, 198, 198);
 }

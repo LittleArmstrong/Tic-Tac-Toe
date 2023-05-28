@@ -114,12 +114,18 @@ const tictactoe = (() => {
 
    function createBoard(xCellsMax, yCellsMax) {
       const board = [];
+
+      //populate the board with cells
       for (let y = 0; y < yCellsMax; y++) {
          for (let x = 0; x < xCellsMax; x++) {
             board.push(createCell(x, y));
          }
       }
 
+      /**
+       * Get a copy of the board but with the references of the cells
+       * @returns {Cell[]} a copy of the board
+       */
       const get = () => [...board];
       /**
        * Get the specified cell from the board
@@ -127,7 +133,8 @@ const tictactoe = (() => {
        * @returns {Cell} the cell object of that position from the board
        */
       const getCell = (position) => {
-         const index1D = position.getX() + position.getY() * xCellsMax;
+         const [x, y] = position.get();
+         const index1D = (x - 1) + (y - 1) * xCellsMax;
          return board?.[index1D];
       }
       const reset = () => board.forEach(cell => cell.clearContent())
@@ -174,7 +181,31 @@ const tictactoe = (() => {
          }
          return coordinates;
       }
-      return { get, reset, getCell, findStreakFrom };
+
+      let nodeContainer = null;
+
+      /**
+       * Set the nodeContainer
+       * @param {Element} node board node containing the cell nodes
+       */
+      const setNodeContainer = (node) => {
+         nodeContainer = node;
+      }
+
+      /**
+       * Render the corresponding node of the cell
+       * @param {Position} position board position of the cell
+       * @returns nothing
+       */
+      const updateCellNode = (position) => {
+         if (!nodeContainer) return
+         const cell = getCell(position);
+         const [x, y] = position.get();
+         const cellNode = nodeContainer.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+         cellNode.innerText = cell.getContent();
+      }
+
+      return { get, reset, getCell, findStreakFrom, setNodeContainer, updateCellNode };
    }
 
    /**   
@@ -229,11 +260,90 @@ const tictactoe = (() => {
       return { getName, getChar, getPositions, pushPosition, hasPosition };
    }
 
-   return { createBoard, createPlayer };
+   /**   
+    * @typedef {Object} TurnSystem
+    * @property {Function} getCurrentPlayer get the player of the current turn
+    * @property {Function} nextPlayer get the player of the next turn
+   */
+
+   /**
+    * Create a turn object to control the player turn system
+    * @param {Player[]} players the players playing the game
+    * @param {Integer} startTurn the turn to start with
+    * @returns {TurnSystem} a turn object 
+    */
+   const createTurnSystem = (players, startTurn = 0) => {
+      const maxTurn = players.length - 1;
+      let currentTurn = startTurn;
+
+      /**
+       * Calculate the next turn
+       * @returns {Integer} the next turn 
+       */
+      const calculateNextTurn = () => currentTurn + 1 > maxTurn ? 0 : currentTurn + 1;
+
+      /**
+       * Get the player of the given turn
+       * @param {Integer} turn turn of the player
+       * @returns {Player} the player
+       */
+      const getPlayer = (turn) => players?.[turn];
+
+      /**
+       * Returns the player of the current turn
+       * @returns {Player} the player of the current turn
+       */
+      const getCurrentPlayer = () => getPlayer(currentTurn);
+
+      /**
+       * Returns the next player
+       * @returns {Player} the player of the next turn
+       */
+      const getNextPlayer = () => {
+         return getPlayer(calculateNextTurn());
+      }
+
+      /**
+       * Sets the next turn if valid.
+       * @param {Integer} turn the next turn
+       * @returns nothing
+       */
+
+      const setNextTurn = (turn = calculateNextTurn()) => {
+         if (turn < 0 || turn > maxTurn) return
+         currentTurn = turn;
+      }
+
+      return { getPlayer, getCurrentPlayer, getNextPlayer, setNextTurn }
+   }
+
+   return { createBoard, createPlayer, createTurnSystem, createPosition };
 })();
 
 const boardNode = document.getElementById("board");
+const board = tictactoe.createBoard(3, 3);
+board.setNodeContainer(boardNode);
+
+const players = [
+   tictactoe.createPlayer("Player_1", "X"),
+   tictactoe.createPlayer("Player_2", "O")
+];
+
+const turnSystem = tictactoe.createTurnSystem(players);
+
+
 boardNode.addEventListener("click", function (event) {
    const cellNode = event.target;
-   console.log(event.target)
+   const position = tictactoe.createPosition(cellNode.dataset.x, cellNode.dataset.y);
+   const cell = board.getCell(position);
+   if (cell.getContent()) return;
+
+   const currentPlayer = turnSystem.getCurrentPlayer();
+   const playerChar = currentPlayer.getChar();
+   cell.setContentTo(playerChar);
+
+   board.updateCellNode(position);
+
+
+   turnSystem.setNextTurn();
 })
