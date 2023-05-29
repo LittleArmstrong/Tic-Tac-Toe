@@ -40,13 +40,16 @@ const gameController = (function () {
    const playerOne = Player({ name: "Player One", token: "X" });
    const playerTwo = Player({ name: "Player Two", token: "O" });
    const players = [playerOne, playerTwo];
+   const maxMoves = 9;
 
    let activePlayer = players[0];
    let gameFinished = false;
+   let moveCounter = 0;
 
    const playRound = ({ row, column }) => {
       if (board.isMarked({ row, column }) || gameFinished) return;
       markBoardCell({ row, column });
+      incrementMoveCounter();
       const event = evaluateBoard();
       handle(event);
    }
@@ -57,10 +60,16 @@ const gameController = (function () {
          .mark(activePlayer.getToken());
    }
 
+   const incrementMoveCounter = () => {
+      moveCounter++;
+   }
+
    const evaluateBoard = () => {
-      const winningLine = findWinningLine(activePlayer);
-      if (winningLine) return "win"
-      else return "default"
+      let event;
+      if (findWinningLine(activePlayer)) event = "win"
+      else if (markedLastCell()) event = "draw"
+      else event = "default"
+      return event;
    }
 
    const possibleWinningLines = [
@@ -89,10 +98,18 @@ const gameController = (function () {
       }
    }
 
+   const markedLastCell = () => moveCounter >= maxMoves;
+
    const handle = (event) => {
       switch (event) {
          case "win":
             endGame();
+            printWin();
+            break;
+
+         case "draw":
+            endGame();
+            printDraw();
             break;
 
          case "default":
@@ -104,15 +121,16 @@ const gameController = (function () {
       }
    }
 
-   const endGame = () => {
-      gameFinished = true;
-      printWin();
-
-   }
+   const endGame = () => gameFinished = true;
 
    const printWin = () => {
       printRound();
       console.log("YOU WIN: ", activePlayer.getName());
+   }
+
+   const printDraw = () => {
+      printRound();
+      console.log("IT'S A DRAW");
    }
 
    const prepareNextRound = () => {
