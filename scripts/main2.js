@@ -13,18 +13,19 @@ function Board() {
 
    const get = () => board;
    const getCell = ({ row, column }) => board[row][column];
-
-   return { get, getCell };
+   const isMarked = ({ row, column }) => getCell({ row, column }).isMarked();
+   return { get, getCell, isMarked };
 }
 
 function Cell() {
    let value = "";
 
-   const setValue = (newValue) => value = newValue;
+   const mark = (newValue) => value = newValue;
+   const isMarked = () => !!value;
    const getValue = () => value;
    const clear = () => value = "";
 
-   return { setValue, getValue, clear };
+   return { mark, getValue, clear, isMarked };
 }
 
 function Player({ name, token }) {
@@ -43,29 +44,22 @@ const gameController = (function () {
    let activePlayer = players[0];
 
    const playRound = ({ row, column }) => {
-      const cell = board.getCell({ row, column });
-      if (cell.getValue()) return;
-      const token = activePlayer.getToken();
-      cell.setValue(token);
+      if (board.isMarked({ row, column })) return;
+      markBoardCell({ row, column });
+      const event = evaluateBoard();
+      handle(event);
+   }
 
+   const markBoardCell = ({ row, column }) => {
+      board
+         .getCell({ row, column })
+         .mark(activePlayer.getToken());
+   }
+
+   const evaluateBoard = () => {
       const winningLine = findWinningLine(activePlayer);
-      if (winningLine) {
-         printWin();
-         return;
-      }
-      switchPlayer()
-      printRound();
-   }
-
-   const switchPlayer = () => {
-      activePlayer = activePlayer === players[0] ? players[1] : players[0];
-   }
-
-   const printRound = () => {
-      const boardContent = board.get().map(row => row.map(cell => cell.getValue()));
-      console.clear()
-      console.log("Your turn: ", activePlayer.getName())
-      console.table(boardContent);
+      if (winningLine) return "win"
+      else return "nothing"
    }
 
    const possibleWinningLines = [
@@ -87,12 +81,30 @@ const gameController = (function () {
       for (const possibleWinningLine of possibleWinningLines) {
          const line = possibleWinningLine.filter(point => {
             const [row, column] = point;
-            const cell = board.get()[row][column];
+            const cell = board.getCell({ row, column });
             if (cell.getValue() === activePlayer.getToken()) return true;
          })
          if (line.length >= winningLineLength) return line;
       }
-      return;
+   }
+
+   const handle = (event) => {
+      switch (event) {
+         case "win":
+            endGame();
+            break;
+
+         case "nothing":
+            prepareNextRound();
+            break;
+
+         default:
+            break;
+      }
+   }
+
+   const endGame = () => {
+      printWin();
    }
 
    const printWin = () => {
@@ -100,17 +112,25 @@ const gameController = (function () {
       console.log("YOU WIN: ", activePlayer.getName());
    }
 
+   const prepareNextRound = () => {
+      switchPlayer()
+      printRound();
+   }
+
+   const switchPlayer = () => {
+      activePlayer = activePlayer === players[0] ? players[1] : players[0];
+   }
+
+   const printRound = () => {
+      //create array from board with primitive values to show in console
+      const boardContent = board.get().map(row => row.map(cell => cell.getValue()));
+      console.clear()
+      console.log("Your turn: ", activePlayer.getName())
+      console.table(boardContent);
+   }
 
    console.log("Your turn: ", activePlayer.getName());
 
    return { playRound }
 
 })();
-
-gameController.playRound({ row: 1, column: 0 });
-gameController.playRound({ row: 1, column: 0 });
-gameController.playRound({ row: 1, column: 1 });
-gameController.playRound({ row: 0, column: 0 });
-gameController.playRound({ row: 0, column: 1 });
-gameController.playRound({ row: 2, column: 0 });
-
