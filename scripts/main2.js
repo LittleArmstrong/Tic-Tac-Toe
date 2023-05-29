@@ -14,7 +14,10 @@ function Board() {
    const get = () => board;
    const getCell = ({ row, column }) => board[row][column];
    const isMarked = ({ row, column }) => getCell({ row, column }).isMarked();
-   return { get, getCell, isMarked };
+   const reset = () => {
+      board.forEach(row => row.forEach(cell => cell.clear()));
+   }
+   return { get, getCell, isMarked, reset };
 }
 
 function Cell() {
@@ -45,6 +48,8 @@ const gameController = (function () {
    let activePlayer = players[0];
    let gameFinished = false;
    let moveCounter = 0;
+
+   console.log("Your turn: ", activePlayer.getName());
 
    const playRound = ({ row, column }) => {
       if (board.isMarked({ row, column }) || gameFinished) return;
@@ -150,9 +155,15 @@ const gameController = (function () {
       console.table(boardContent);
    }
 
-   console.log("Your turn: ", activePlayer.getName());
+   const resetGame = () => {
+      board.reset();
+      gameFinished = false;
+      moveCounter = 0;
+      switchPlayer();
+      printRound();
+   }
 
-   return { playRound }
+   return { playRound, resetGame }
 
 })();
 
@@ -160,4 +171,9 @@ const boardContainer = document.getElementById("board");
 boardContainer.addEventListener("click", (event) => {
    const [row, column] = event.target.dataset.point.split(",");
    gameController.playRound({ row, column });
+})
+
+const resetBtn = document.getElementById("reset-game");
+resetBtn.addEventListener("click", () => {
+   gameController.resetGame();
 })
