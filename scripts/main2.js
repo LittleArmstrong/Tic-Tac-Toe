@@ -42,9 +42,10 @@ const gameController = (function () {
    const players = [playerOne, playerTwo];
 
    let activePlayer = players[0];
+   let gameFinished = false;
 
    const playRound = ({ row, column }) => {
-      if (board.isMarked({ row, column })) return;
+      if (board.isMarked({ row, column }) || gameFinished) return;
       markBoardCell({ row, column });
       const event = evaluateBoard();
       handle(event);
@@ -59,7 +60,7 @@ const gameController = (function () {
    const evaluateBoard = () => {
       const winningLine = findWinningLine(activePlayer);
       if (winningLine) return "win"
-      else return "nothing"
+      else return "default"
    }
 
    const possibleWinningLines = [
@@ -94,7 +95,7 @@ const gameController = (function () {
             endGame();
             break;
 
-         case "nothing":
+         case "default":
             prepareNextRound();
             break;
 
@@ -104,7 +105,9 @@ const gameController = (function () {
    }
 
    const endGame = () => {
+      gameFinished = true;
       printWin();
+
    }
 
    const printWin = () => {
@@ -134,3 +137,9 @@ const gameController = (function () {
    return { playRound }
 
 })();
+
+const boardContainer = document.getElementById("board");
+boardContainer.addEventListener("click", (event) => {
+   const [row, column] = event.target.dataset.point.split(",");
+   gameController.playRound({ row, column });
+})
