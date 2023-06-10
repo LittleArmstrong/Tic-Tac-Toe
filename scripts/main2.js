@@ -14,10 +14,10 @@ function Board() {
    const get = () => board;
    const getCell = ({ row, column }) => board[row][column];
    const isMarked = ({ row, column }) => getCell({ row, column }).isMarked();
-   const reset = () => {
+   const clear = () => {
       board.forEach(row => row.forEach(cell => cell.clear()));
    }
-   return { get, getCell, isMarked, reset };
+   return { get, getCell, isMarked, clear };
 }
 
 function Cell() {
@@ -39,6 +39,13 @@ function Player({ name, token }) {
 }
 
 const gameController = (function () {
+   const event = {
+      gameWon: 0,
+      gameDraw: 1,
+      continue: 2,
+
+   };
+   const stats = { boardValues: [] };
    const board = Board();
    const playerOne = Player({ name: "Player One", token: "X" });
    const playerTwo = Player({ name: "Player Two", token: "O" });
@@ -48,15 +55,17 @@ const gameController = (function () {
    let activePlayer = players[0];
    let gameFinished = false;
    let moveCounter = 0;
+   let eventStack = [];
 
-   console.log("Your turn: ", activePlayer.getName());
+
 
    const playRound = ({ row, column }) => {
       if (board.isMarked({ row, column }) || gameFinished) return;
       markBoardCell({ row, column });
       incrementMoveCounter();
-      const event = evaluateBoard();
-      handle(event);
+      evaluateBoard();
+      handleEvents();
+      updateGameStats();
    }
 
    const markBoardCell = ({ row, column }) => {
@@ -70,11 +79,9 @@ const gameController = (function () {
    }
 
    const evaluateBoard = () => {
-      let event;
-      if (findWinningLine(activePlayer)) event = "win"
-      else if (markedLastCell()) event = "draw"
-      else event = "default"
-      return event;
+      if (findWinningLine(activePlayer)) eventStack.push(event.gameWon)
+      else if (markedLastCell()) eventStack.push(event.gameDraw)
+      else eventStack.push(event.continue)
    }
 
    const possibleWinningLines = [
@@ -105,25 +112,35 @@ const gameController = (function () {
 
    const markedLastCell = () => moveCounter >= maxMoves;
 
-   const handle = (event) => {
-      switch (event) {
-         case "win":
-            endGame();
-            printWin();
-            break;
+   const handleEvents = () => {
+      while (eventStack.length) {
+         switch (eventStack.shift()) {
+            case event.gameWon:
+               endWonGame();
+               break;
 
-         case "draw":
-            endGame();
-            printDraw();
-            break;
+            case event.gameDraw:
+               endDrawGame();
+               break;
 
-         case "default":
-            prepareNextRound();
-            break;
+            case event.continue:
+               prepareNextRound();
+               break;
 
-         default:
-            break;
+            default:
+               break;
+         }
       }
+   }
+
+   const endWonGame = () => {
+      endGame();
+      printWin();
+   }
+
+   const endDrawGame = () => {
+      endGame();
+      printDraw();
    }
 
    const endGame = () => gameFinished = true;
@@ -148,32 +165,57 @@ const gameController = (function () {
    }
 
    const printRound = () => {
-      //create array from board with primitive values to show in console
-      const boardContent = board.get().map(row => row.map(cell => cell.getValue()));
       console.clear()
       console.log("Your turn: ", activePlayer.getName())
-      console.table(boardContent);
+      console.table(getCellValues());
    }
+
+   const getCellValues = () => board.get().map(row => row.map(cell => cell.getValue()));
 
    const resetGame = () => {
-      board.reset();
-      gameFinished = false;
-      moveCounter = 0;
+      board.clear();
+      resetMoveCounter();
+      restartGame();
       switchPlayer();
+      updateGameStats();
       printRound();
+
    }
 
-   return { playRound, resetGame }
+   const restartGame = () => gameFinished = false;
+   const resetMoveCounter = () => moveCounter = 0;
+
+   const updateGameStats = () => {
+      stats.boardValues = getCellValues();
+      console.log(stats);
+   }
+
+   printRound();
+
+   return { playRound, resetGame, stats }
 
 })();
 
 const boardContainer = document.getElementById("board");
+
+
 boardContainer.addEventListener("click", (event) => {
    const [row, column] = event.target.dataset.point.split(",");
    gameController.playRound({ row, column });
+
+   const { boardValues } = gameController.stats;
+   event.target.textContent = boardValues[row][column];
 })
 
 const resetBtn = document.getElementById("reset-game");
 resetBtn.addEventListener("click", () => {
    gameController.resetGame();
+
+   const { boardValues } = gameController.stats;
+   boardContainer.childNodes.forEach((node) => {
+      const [row, column] = node.dataset?.point.split(",") || [-1, -1];
+      if (row !== -1) node.textContent = boardValues[row][column];
+   })
+
 })
+
