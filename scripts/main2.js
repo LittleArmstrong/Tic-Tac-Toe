@@ -45,7 +45,7 @@ const gameController = (function () {
       continue: 2,
 
    };
-   const stats = { boardValues: [] };
+   const status = { board: [], messages: { turn: '', winner: '' } };
    const board = Board();
    const playerOne = Player({ name: "Player One", token: "X" });
    const playerTwo = Player({ name: "Player Two", token: "O" });
@@ -54,6 +54,7 @@ const gameController = (function () {
 
    let activePlayer = players[0];
    let gameFinished = false;
+   let winner = null;
    let moveCounter = 0;
    let eventStack = [];
 
@@ -135,19 +136,23 @@ const gameController = (function () {
 
    const endWonGame = () => {
       endGame();
+      setWinner(activePlayer);
       printWin();
    }
 
    const endDrawGame = () => {
       endGame();
+      setWinner(null);
       printDraw();
    }
 
    const endGame = () => gameFinished = true;
 
+   const setWinner = (player) => winner = player;
+
    const printWin = () => {
       printRound();
-      console.log("YOU WIN: ", activePlayer.getName());
+      console.log("YOU WIN: ", winner.getName());
    }
 
    const printDraw = () => {
@@ -174,6 +179,7 @@ const gameController = (function () {
 
    const resetGame = () => {
       board.clear();
+      setWinner(null);
       resetMoveCounter();
       restartGame();
       switchPlayer();
@@ -186,36 +192,51 @@ const gameController = (function () {
    const resetMoveCounter = () => moveCounter = 0;
 
    const updateGameStats = () => {
-      stats.boardValues = getCellValues();
-      console.log(stats);
+      status.board = getCellValues();
+      status.activePlayer = activePlayer;
+      status.gameFinished = gameFinished;
+      status.winner = winner;
    }
 
    printRound();
+   updateGameStats();
 
-   return { playRound, resetGame, stats }
+   return { playRound, resetGame, status }
 
 })();
 
 const boardContainer = document.getElementById("board");
+const messageBar = document.getElementById('message-bar');
+
+const setMessage = (message) => messageBar.value = message;
+const setTurnMessage = (playerName) => messageBar.value = 'Your turn: ' + playerName;
+setTurnMessage(gameController.status.activePlayer.getName());
 
 
 boardContainer.addEventListener("click", (event) => {
    const [row, column] = event.target.dataset.point.split(",");
    gameController.playRound({ row, column });
 
-   const { boardValues } = gameController.stats;
-   event.target.textContent = boardValues[row][column];
+   const { board } = gameController.status;
+   event.target.textContent = board[row][column];
+   setTurnMessage(gameController.status.activePlayer.getName());
+   if (gameController.status.gameFinished) {
+      const winner = gameController.status.winner;
+      if (winner) setMessage('You WIN: ' + winner.getName());
+      else setMessage("It's a DRAW");
+   }
 })
 
 const resetBtn = document.getElementById("reset-game");
 resetBtn.addEventListener("click", () => {
    gameController.resetGame();
 
-   const { boardValues } = gameController.stats;
+   const { board } = gameController.status;
    boardContainer.childNodes.forEach((node) => {
       const [row, column] = node.dataset?.point.split(",") || [-1, -1];
-      if (row !== -1) node.textContent = boardValues[row][column];
+      if (row !== -1) node.textContent = board[row][column];
    })
+   setTurnMessage(gameController.status.activePlayer.getName());
 
 })
 

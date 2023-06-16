@@ -110,7 +110,14 @@ body {
    grid-area: settings;
 }
 
-button.start-game {
+.menu input[type=text] {
+   margin-top: 3px;
+   font-size: 1rem;
+   width: 100%;
+   text-align: center;
+}
+
+.menu button.start-game {
    font-size: 1rem;
    font-weight: bold;
    border: 2px solid black;
