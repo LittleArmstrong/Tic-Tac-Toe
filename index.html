@@ -19,23 +19,22 @@
          </div>
       </div>
       <div class="board-container">
-         <div id="settings" class="settings">
+         <form id="settings" class="settings">
             <form action="#">
                <div class="field">
                   <label for="player1">Player 1</label>
-                  <input type="text" id="player1">
+                  <input type="text" id="player1" name="player1" value="Player One">
                   <span>X</span>
                </div>
                <div class="field">
                   <label for="player2">Player 2</label>
-                  <input type="text" id="player2">
+                  <input type="text" id="player2" name="player2" value="Player Two">
                   <span>O</span>
                </div>
-               <button>Confirm</button>
-
+               <button id="save-settings">Confirm</button>
             </form>
 
-         </div>
+         </form>
          <div class="board" id="board">
             <div class="cell" data-point="0,0"></div>
             <div class="cell" data-point="0,1"></div>

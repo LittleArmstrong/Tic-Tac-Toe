@@ -34,8 +34,9 @@ function Cell() {
 function Player({ name, token }) {
    const getName = () => name;
    const getToken = () => token;
+   const setName = (newName) => name = newName;
 
-   return { getName, getToken };
+   return { getName, getToken, setName };
 }
 
 const gameController = (function () {
@@ -198,10 +199,15 @@ const gameController = (function () {
       status.winner = winner;
    }
 
+   const applySettings = (settings) => {
+      playerOne.setName(settings.player1);
+      playerTwo.setName(settings.player2);
+   }
+
    printRound();
    updateGameStats();
 
-   return { playRound, resetGame, status }
+   return { playRound, resetGame, status, applySettings }
 
 })();
 
@@ -237,6 +243,13 @@ resetBtn.addEventListener("click", () => {
       if (row !== -1) node.textContent = board[row][column];
    })
    setTurnMessage(gameController.status.activePlayer.getName());
-
 })
 
+const settingsBtn = document.getElementById('save-settings');
+const settingsForm = document.getElementById('settings');
+
+settingsBtn.addEventListener('click', (event) => {
+   event.preventDefault();
+   const settings = new FormData(settingsForm);
+   gameController.applySettings(Object.fromEntries(settings));
+})
